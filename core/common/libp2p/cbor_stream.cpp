@@ -34,12 +34,15 @@ namespace fc::common::libp2p {
         gsl::make_span(buffer_).subspan(size_),
         kReserveBytes,
         [cb{std::move(cb)}, self{shared_from_this()}](auto count) {
-          spdlog::debug(
-              "Read More: Value: {}, Error: {}, Exception: {}, Lost consistency: {}",
-              count.has_value(),
-              count.has_error(),
-              count.has_exception(),
-              count.has_lost_consistency());
+          if (!count) {
+            spdlog::debug(
+                "Read More: Value: {}, Error: {}, Exception: {}, Lost "
+                "consistency: {}",
+                count.has_value(),
+                count.has_error(),
+                count.has_exception(),
+                count.has_lost_consistency());
+          }
           if (count.has_error()) {
             return cb(count.error());
           }
@@ -51,11 +54,14 @@ namespace fc::common::libp2p {
 
   void CborStream::consume(gsl::span<uint8_t> input, ReadCallbackFunc cb) {
     auto consumed = buffering_.consume(input);
-    spdlog::debug("Сonsume: Value: {}, Error: {}, Exception: {}, Lost consistency: {}",
-                  consumed.has_value(),
-                  consumed.has_error(),
-                  consumed.has_exception(),
-                  consumed.has_lost_consistency());
+    if (!consumed) {
+      spdlog::debug(
+          "Сonsume: Value: {}, Error: {}, Exception: {}, Lost consistency: {}",
+          consumed.has_value(),
+          consumed.has_error(),
+          consumed.has_exception(),
+          consumed.has_lost_consistency());
+    }
     if (consumed.has_error()) {
       return cb(consumed.error());
     }

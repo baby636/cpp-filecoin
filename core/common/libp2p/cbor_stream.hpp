@@ -50,12 +50,14 @@ namespace fc::common::libp2p {
     template <typename T>
     void write(const T &value, WriteCallbackFunc cb) {
       auto encoded = codec::cbor::encode(value);
-      spdlog::debug(
-          "write: Value: {}, Error: {}, Exception: {}, Lost consistency: {}",
-          encoded.has_value(),
-          encoded.has_error(),
-          encoded.has_exception(),
-          encoded.has_lost_consistency());
+      if (!encoded) {
+        spdlog::debug(
+            "write: Value: {}, Error: {}, Exception: {}, Lost consistency: {}",
+            encoded.has_value(),
+            encoded.has_error(),
+            encoded.has_exception(),
+            encoded.has_lost_consistency());
+      }
       if (encoded.has_error()) {
         return cb(encoded.error());
       }
