@@ -124,7 +124,12 @@ namespace fc::sync::blocksync {
         }
         return outcome::success();
       }()};
-      if (!_result) {
+      log()->debug("Value: {}, Error: {}, Exception: {}, Lost consistency: {}",
+                   _result.has_value(),
+                   _result.has_error(),
+                   _result.has_exception(),
+                   _result.has_lost_consistency());
+      if (_result.has_error()) {
         log()->debug("failed filling response: {:#}", _result.error());
       }
 

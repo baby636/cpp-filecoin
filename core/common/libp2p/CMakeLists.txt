@@ -9,4 +9,5 @@ add_library(cbor_stream
     )
 target_link_libraries(cbor_stream
     cbor
+    logger
     )
