@@ -26,6 +26,10 @@
 #include "storage/leveldb/leveldb.hpp"
 #include "vm/runtime/env_context.hpp"
 
+namespace libp2p::basic {
+  class Scheduler;
+}  // namespace libp2p::basic
+
 namespace fc::node {
   using api::FullNodeApiV1Wrapper;
   using data_transfer::DataTransfer;
@@ -63,6 +67,7 @@ namespace fc::node {
 
     // libp2p + async base objects
     std::shared_ptr<boost::asio::io_context> io_context;
+    std::shared_ptr<libp2p::basic::Scheduler> scheduler2;
     std::shared_ptr<Scheduler> scheduler;
     std::shared_ptr<sync::events::Events> events;
     std::shared_ptr<libp2p::Host> host;

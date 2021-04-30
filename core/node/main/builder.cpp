@@ -225,11 +225,11 @@ namespace fc::node {
   void writableIpld(Config &config, NodeObjects &o) {
     auto car_path{config.join("cids_index.car")};
     // TODO(turuslan): max memory
-    // estimated, 1gb
+    // estimated, 1.5gb
     o.ipld_cids_write = *storage::cids_index::loadOrCreateWithProgress(
-        car_path, true, 1 << 30, o.ipld, log());
+        car_path, true, 3 << 29, o.ipld, log());
     // estimated
-    o.ipld_cids_write->flush_on = 200000;
+    o.ipld_cids_write->flush_on = 300000;
     o.ipld = o.ipld_cids_write;
   }
 
@@ -374,6 +374,8 @@ namespace fc::node {
 
     o.io_context = injector.create<std::shared_ptr<boost::asio::io_context>>();
 
+    o.scheduler2 = injector.create<std::shared_ptr<libp2p::basic::Scheduler>>();
+
     o.scheduler = std::make_shared<libp2p::protocol::AsioScheduler>(
         o.io_context, libp2p::protocol::SchedulerConfig{});
 
@@ -403,7 +405,7 @@ namespace fc::node {
         o.host, o.utc_clock, *config.genesis_cid, o.events);
 
     o.gossip = libp2p::protocol::gossip::create(
-        o.scheduler, o.host, config.gossip_config);
+        o.scheduler2, o.host, config.gossip_config);
 
     using libp2p::protocol::gossip::ByteArray;
     o.gossip->setMessageIdFn(

@@ -6,6 +6,8 @@
 #ifndef CPP_FILECOIN_CORE_PRIMITIVES_TIPSET_TIPSET_HPP
 #define CPP_FILECOIN_CORE_PRIMITIVES_TIPSET_TIPSET_HPP
 
+#include <libp2p/common/instances.hpp>
+
 #include "primitives/block/block.hpp"
 #include "primitives/tipset/tipset_key.hpp"
 
@@ -125,6 +127,8 @@ namespace fc::primitives::tipset {
 
     TipsetKey key;
     std::vector<block::BlockHeader> blks;  ///< block headers
+
+    LIBP2P_INSTANCES(fc::primitives::tipset::Tipset);
   };
 
   /**
