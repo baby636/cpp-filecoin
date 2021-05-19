@@ -43,18 +43,6 @@ namespace fc::sync {
     return ERROR_TEXT("stepUp: error");
   }
 
-  bool isAncestor(TsBranchPtr l, TsBranchPtr r) {
-    while (true) {
-      if (!r || r->chain.begin()->first < l->chain.begin()->first) {
-        return false;
-      }
-      if (r == l) {
-        return true;
-      }
-      r = r->parent;
-    }
-  }
-
   SyncJob::SyncJob(std::shared_ptr<libp2p::Host> host,
                    std::shared_ptr<ChainStoreImpl> chain_store,
                    std::shared_ptr<libp2p::protocol::Scheduler> scheduler,
@@ -399,10 +387,6 @@ namespace fc::sync {
     }
     auto ts{interpret_ts_};
     auto branch{find(*ts_branches_, ts).first};
-    if (isAncestor(branch, attached_heaviest_.first)
-        && !interpreter_cache_->tryGet(ts->key)) {
-      logTarget(attached_heaviest_.first, ts->height());
-    }
     if (!checkParent(ts)) {
       // TODO: detach and ban branches
       interpret_ts_ = nullptr;
