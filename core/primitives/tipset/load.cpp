@@ -37,14 +37,6 @@ namespace fc::primitives::tipset {
     return TsLoad::load(blocks);
   }
 
-  outcome::result<TipsetCPtr> TsLoadIpld::load(
-      std::vector<BlockHeader> blocks) {
-    for (auto &block : blocks) {
-      OUTCOME_TRY(ipld->setCbor(block));
-    }
-    return TsLoad::load(std::move(blocks));
-  }
-
   TsLoadCache::TsLoadCache(TsLoadPtr ts_load, size_t cache_size)
       : ts_load{ts_load}, cache{cache_size} {}
 
@@ -66,5 +58,19 @@ namespace fc::primitives::tipset {
     std::unique_lock lock{mutex};
     cache.insert(ts->key, ts);
     return std::move(ts);
+  }
+
+  CID put(const IpldPtr &ipld,
+          const std::shared_ptr<PutBlockHeader> &put,
+          const BlockHeader &header) {
+    auto value{codec::cbor::encode(header).value()};
+    auto key{crypto::blake2b::blake2b_256(value)};
+    auto cid{asCborBlakeCid(key)};
+    if (put) {
+      put->put(key, value);
+    } else {
+      ipld->set(cid, std::move(value)).value();
+    }
+    return cid;
   }
 }  // namespace fc::primitives::tipset

@@ -10,6 +10,7 @@
 #include <mutex>
 #include <shared_mutex>
 
+#include "cbor_blake/ipld.hpp"
 #include "common/blob.hpp"
 #include "common/enum.hpp"
 #include "storage/ipfs/datastore.hpp"
@@ -167,7 +168,11 @@ namespace fc::storage::cids_index {
   outcome::result<std::shared_ptr<Index>> load(
       const std::string &index_path, boost::optional<size_t> max_memory);
 
-  struct CidsIpld : public Ipld, public std::enable_shared_from_this<CidsIpld> {
+  struct CidsIpld : CbIpld,
+                    public Ipld,
+                    public std::enable_shared_from_this<CidsIpld> {
+    using CbIpld::get;
+
     outcome::result<bool> contains(const CID &cid) const override;
     outcome::result<void> set(const CID &cid, Buffer value) override;
     outcome::result<Buffer> get(const CID &cid) const override;
@@ -177,6 +182,9 @@ namespace fc::storage::cids_index {
     IpldPtr shared() override {
       return shared_from_this();
     }
+
+    bool _get(const CbCid &key, Buffer *value) const override;
+    void _put(const CbCid &key, BytesIn value) override;
 
     void asyncFlush();
 

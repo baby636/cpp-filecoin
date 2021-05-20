@@ -6,8 +6,14 @@
 #include "vm/state/impl/state_tree_impl.hpp"
 
 #include <gtest/gtest.h>
+
+#include "cbor_blake/ipld_any.hpp"
+#include "codec/actor.hpp"
+#include "codec/address.hpp"
+#include "codec/hamt.hpp"
 #include "primitives/address/address_codec.hpp"
 #include "testutil/init_actor.hpp"
+#include "vm/actor/codes.hpp"
 
 using fc::primitives::BigInt;
 using fc::primitives::address::Address;
@@ -72,4 +78,32 @@ TEST_F(StateTreeTest, RegisterNewAddressLookupId) {
   Address address{fc::primitives::address::ActorExecHash{}};
   EXPECT_OUTCOME_EQ(tree->registerNewAddress(address), kAddressId);
   EXPECT_OUTCOME_EQ(tree->lookupId(address), kAddressId);
+}
+
+/**
+ * walk visits hamt key-values
+ */
+TEST_F(StateTreeTest, Walk) {
+  using namespace fc;
+  adt::Map<vm::actor::Actor, adt::AddressKeyer> map{store_};
+  auto head1{store_->setCbor(3).value()};
+  auto code1{vm::actor::code::init0};
+  map.set(Address::makeFromId(1),
+          {vm::actor::makeRawIdentityCid(std::string{code1}), head1})
+      .value();
+  codec::hamt::HamtWalk walk{std::make_shared<AnyAsCbIpld>(store_),
+                             *asBlake(map.hamt.flush().value())};
+  BytesIn _addr, _actor;
+  EXPECT_FALSE(walk.empty());
+  EXPECT_TRUE(walk.next(_addr, _actor));
+  EXPECT_TRUE(walk.empty());
+  uint64_t id2;
+  std::string_view code2;
+  CbCidPtr head2;
+  EXPECT_TRUE(codec::address::readId(id2, _addr));
+  EXPECT_EQ(id2, 1);
+  EXPECT_TRUE(codec::actor::readActor(code2, head2, _actor));
+  EXPECT_EQ(code2, code1);
+  EXPECT_EQ(*head2, *asBlake(head1));
+  EXPECT_FALSE(walk.next(_addr, _actor));
 }

@@ -8,6 +8,7 @@
 #include <boost/compute/detail/lru_cache.hpp>
 #include <mutex>
 
+#include "cbor_blake/cid.hpp"
 #include "primitives/tipset/tipset.hpp"
 
 namespace fc::primitives::tipset {
@@ -31,7 +32,6 @@ namespace fc::primitives::tipset {
   struct TsLoadIpld : TsLoad {
     TsLoadIpld(IpldPtr ipld);
     outcome::result<TipsetCPtr> load(const TipsetKey &key) override;
-    outcome::result<TipsetCPtr> load(std::vector<BlockHeader> blocks) override;
     IpldPtr ipld;
   };
 
@@ -43,4 +43,12 @@ namespace fc::primitives::tipset {
     std::mutex mutex;
     boost::compute::detail::lru_cache<TipsetKey, TipsetCPtr> cache;
   };
+
+  struct PutBlockHeader {
+    virtual ~PutBlockHeader() = default;
+    virtual void put(const CbCid &key, BytesIn value) = 0;
+  };
+  CID put(const IpldPtr &ipld,
+          const std::shared_ptr<PutBlockHeader> &put,
+          const BlockHeader &header);
 }  // namespace fc::primitives::tipset
